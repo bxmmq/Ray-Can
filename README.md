@@ -2,16 +2,17 @@
 
 ## โลโก้แบรนด์ (รูปเอง)
 
-1. วางไฟล์รูปในโฟลเดอร์ `public/` เช่น `public/logo.png`
-2. ใน `.env` เพิ่มบรรทัดนี้ (แล้วรีสตาร์ท dev server):
+1. วางไฟล์รูปในโฟลเดอร์ **`public/`** เช่น **`public/logo.png`**
+2. ในเว็บอ้างที่ **`/logo.png`** เท่านั้น (ไม่มี path `@public/` ใน URL)
+3. **commit ไฟล์เข้า git** — บน Railway/Linux ตัวพิมพ์เล็ก–ใหญ่ต้องตรง (เช่น `logo.png` ไม่ใช่ `Logo.png`)
+4. (ทางเลือก) ใน `.env` หรือ Railway Variables:
 
    ```env
    NEXT_PUBLIC_BRAND_LOGO_URL="/logo.png"
    ```
 
-   หรือใช้ URL ภายนอกได้ เช่น `https://example.com/my-logo.png`
-
-ถ้าไม่ตั้งค่า จะใช้ไอคอนตัว **R** บนพื้น gradient แบบเดิม
+   หรือ URL ภายนอก เช่น `https://example.com/my-logo.png`  
+   ถ้าไม่ตั้งค่า แอปจะใช้ **`/logo.png` เป็นค่าเริ่มต้น** (ไม่พึ่ง build-time env — แก้กรณี deploy แล้วโลโก้ไม่ขึ้น)
 
 ---
 
