@@ -5,6 +5,7 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+/** Throws if DATABASE_URL is missing — only called when prisma is first accessed. */
 function createPrismaClient(): PrismaClient {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
@@ -17,13 +18,10 @@ function createPrismaClient(): PrismaClient {
   });
 }
 
-// Lazy singleton — only created on first use, not at import time.
-// This prevents build-time crashes when DATABASE_URL isn't set yet
-// (e.g. during `next build` static page generation).
-export const prisma = globalForPrisma.prisma ?? (() => {
-  const client = createPrismaClient();
-  if (process.env.NODE_ENV !== "production") {
-    globalForPrisma.prisma = client;
+/** Lazy singleton — PrismaClient is only instantiated on first use, not at import time. */
+export const prisma: PrismaClient = (() => {
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = createPrismaClient();
   }
-  return client;
-})();
+  return globalForPrisma.prisma;
+})() as PrismaClient;
