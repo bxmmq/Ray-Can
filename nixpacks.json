@@ -1,0 +1,8 @@
+{
+  "build": {
+    "command": "",
+    "env": {
+      "NODE_VERSION": "22"
+    }
+  }
+}
