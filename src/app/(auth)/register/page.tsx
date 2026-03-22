@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -28,6 +28,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { status } = useSession();
 
   const {
     register,
@@ -45,6 +46,12 @@ function RegisterForm() {
     const code = searchParams.get("ref")?.trim();
     if (code) setValue("referralCode", code);
   }, [searchParams, setValue]);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/dashboard");
+    }
+  }, [status, router]);
 
   const onSubmit = async (data: RegisterForm) => {
     try {
@@ -65,6 +72,14 @@ function RegisterForm() {
       console.error("Registration failed:", error);
     }
   };
+
+  if (status === "loading" || status === "authenticated") {
+    return (
+      <div className="flex justify-center py-8">
+        <div className="animate-spin w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

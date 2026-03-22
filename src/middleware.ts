@@ -5,8 +5,31 @@ import { getToken } from "next-auth/jwt";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const publicPaths = ["/", "/plans", "/login", "/register", "/api/auth"];
-  const isPublicPath = publicPaths.some((path) => pathname === path || pathname.startsWith("/api/auth"));
+  // Already signed in → don't show login/register forms (fixes navbar session vs form mismatch)
+  if (pathname === "/login" || pathname === "/register") {
+    const token = await getToken({
+      req: request,
+      secret: process.env.AUTH_SECRET,
+    });
+    if (token) {
+      if (pathname === "/login") {
+        const cb = request.nextUrl.searchParams.get("callbackUrl");
+        const safe =
+          cb && cb.startsWith("/") && !cb.startsWith("//") ? cb : "/dashboard";
+        return NextResponse.redirect(new URL(safe, request.url));
+      }
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+    return NextResponse.next();
+  }
+
+  const publicPaths = ["/", "/plans", "/privacy", "/terms", "/api/auth"];
+  const isPublicPath = publicPaths.some(
+    (path) =>
+      pathname === path ||
+      (path === "/plans" && pathname.startsWith("/plans")) ||
+      pathname.startsWith("/api/auth")
+  );
 
   // Public read access to plans API (storefront); mutations require auth in route handlers
   const isPublicPlansGet =

@@ -22,6 +22,8 @@ class OAuthOnlyAccount extends CredentialsSignin {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  // Required behind Railway / reverse proxy so OAuth + cookies use the public URL
+  trustHost: true,
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt",

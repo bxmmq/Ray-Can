@@ -3,10 +3,11 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { Suspense, useEffect } from "react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { GlassInput } from "@/components/ui/glass-input";
 import { GlassButton } from "@/components/ui/glass-button";
@@ -19,8 +20,19 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { status } = useSession();
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    const raw = searchParams.get("callbackUrl");
+    const safe =
+      raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/dashboard";
+    router.replace(safe);
+  }, [status, searchParams, router]);
+
   const {
     register,
     handleSubmit,
@@ -72,6 +84,14 @@ export default function LoginPage() {
       toast.error("เชื่อมต่อไม่สำเร็จ", "ตรวจสอบอินเทอร์เน็ตแล้วลองอีกครั้ง");
     }
   };
+
+  if (status === "loading" || status === "authenticated") {
+    return (
+      <div className="min-h-screen flex items-center justify-center py-12 px-4">
+        <div className="animate-spin w-10 h-10 border-2 border-violet-500 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4">
@@ -178,5 +198,19 @@ export default function LoginPage() {
         </GlassCard>
       </motion.div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center py-12 px-4">
+          <div className="animate-spin w-10 h-10 border-2 border-violet-500 border-t-transparent rounded-full" />
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }
