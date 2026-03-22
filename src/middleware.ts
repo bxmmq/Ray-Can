@@ -62,6 +62,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // ── ส่งต่อ cookie แบบ same-site ให้ client อ่าน session ได้ ──
   const response = NextResponse.next();
 
   response.headers.set("X-Content-Type-Options", "nosniff");

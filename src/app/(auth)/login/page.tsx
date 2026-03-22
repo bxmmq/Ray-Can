@@ -7,7 +7,7 @@ import { signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { GlassInput } from "@/components/ui/glass-input";
 import { GlassButton } from "@/components/ui/glass-button";
@@ -23,14 +23,23 @@ type LoginForm = z.infer<typeof loginSchema>;
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { status } = useSession();
+  const { status, update: refreshSession } = useSession();
+  const [sessionTimedOut, setSessionTimedOut] = useState(false);
+
+  // Fallback: ไม่รอ session เกิน 5 วิ — แสดงฟอร์มได้เลย
+  useEffect(() => {
+    if (status !== "loading") return;
+    const t = setTimeout(() => setSessionTimedOut(true), 5000);
+    return () => clearTimeout(t);
+  }, [status]);
 
   useEffect(() => {
-    if (status !== "authenticated") return;
-    const raw = searchParams.get("callbackUrl");
-    const safe =
-      raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/dashboard";
-    router.replace(safe);
+    if (status === "authenticated") {
+      const raw = searchParams.get("callbackUrl");
+      const safe =
+        raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/dashboard";
+      router.replace(safe);
+    }
   }, [status, searchParams, router]);
 
   const {
@@ -52,6 +61,7 @@ function LoginForm() {
       // NextAuth อาจคืน res.ok === true แม้ล็อกอินล้มเหลว (200 + URL มี ?error=...)
       // ต้องดู result.error — ถ้ามีแปลว่าเข้าไม่ได้
       if (result?.ok && !result?.error) {
+        await refreshSession();
         toast.success("เข้าสู่ระบบสำเร็จ", "กำลังพาไปที่แดชบอร์ด…", 2500);
         router.push("/dashboard");
         router.refresh();
@@ -85,7 +95,8 @@ function LoginForm() {
     }
   };
 
-  if (status === "loading" || status === "authenticated") {
+  // แสดง spinner ตอน loading — แต่ถ้า timeout แล้วยัง loading อยู่ ให้แสดงฟอร์มเลย
+  if (status === "loading" && !sessionTimedOut) {
     return (
       <div className="min-h-screen flex items-center justify-center py-12 px-4">
         <div className="animate-spin w-10 h-10 border-2 border-violet-500 border-t-transparent rounded-full" />

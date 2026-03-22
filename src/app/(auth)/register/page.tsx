@@ -10,7 +10,7 @@ import { motion } from "framer-motion";
 import { GlassCard } from "@/components/ui/glass-card";
 import { GlassInput } from "@/components/ui/glass-input";
 import { GlassButton } from "@/components/ui/glass-button";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 const registerSchema = z.object({
   name: z.string().min(2, "ชื่อต้องมีอย่างน้อย 2 ตัวอักษร"),
@@ -29,6 +29,13 @@ function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status } = useSession();
+  const [sessionTimedOut, setSessionTimedOut] = useState(false);
+
+  useEffect(() => {
+    if (status !== "loading") return;
+    const t = setTimeout(() => setSessionTimedOut(true), 5000);
+    return () => clearTimeout(t);
+  }, [status]);
 
   const {
     register,
@@ -73,12 +80,15 @@ function RegisterForm() {
     }
   };
 
-  if (status === "loading" || status === "authenticated") {
-    return (
-      <div className="flex justify-center py-8">
-        <div className="animate-spin w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full" />
-      </div>
-    );
+  if ((status === "loading" && !sessionTimedOut) || status === "authenticated") {
+    if (status === "loading") {
+      return (
+        <div className="flex justify-center py-8">
+          <div className="animate-spin w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full" />
+        </div>
+      );
+    }
+    return null;
   }
 
   return (

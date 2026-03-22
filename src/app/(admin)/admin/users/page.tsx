@@ -22,13 +22,20 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
     fetch("/api/analytics?type=users")
       .then((res) => res.json())
       .then((data) => {
-        setUsers(data.users || []);
-        setLoading(false);
+        if (!cancelled) setUsers(data.users || []);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (

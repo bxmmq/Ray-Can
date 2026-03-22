@@ -44,13 +44,20 @@ export default function AdminOrdersPage() {
   }, [slipModalUrl, closeSlipModal]);
 
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
     fetch("/api/analytics?type=orders")
       .then((res) => res.json())
       .then((data) => {
-        setOrders(data.orders || []);
-        setLoading(false);
+        if (!cancelled) setOrders(data.orders || []);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const updateOrderStatus = async (id: string, status: string) => {

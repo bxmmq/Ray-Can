@@ -13,13 +13,20 @@ export default function AdminAnalyticsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
     fetch("/api/analytics?type=full")
       .then((res) => res.json())
       .then((resData) => {
-        setData(resData);
-        setLoading(false);
+        if (!cancelled) setData(resData);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (loading) {

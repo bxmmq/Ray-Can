@@ -27,24 +27,41 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (status === "unauthenticated" || (status === "authenticated" && session?.user?.role !== "ADMIN")) {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    } else if (status === "authenticated" && session?.user?.role !== "ADMIN") {
       router.push("/");
     }
   }, [status, session, router]);
 
   useEffect(() => {
-    if (session?.user?.role === "ADMIN") {
-      fetch("/api/analytics")
-        .then((res) => res.json())
-        .then((data) => {
+    if (status !== "authenticated") return;
+
+    if (session?.user?.role !== "ADMIN") {
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    fetch("/api/analytics")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) {
           setStats(data.stats);
           setRecentOrders(data.recentOrders);
           setChartData(data.chartData || []);
-          setLoading(false);
-        })
-        .catch(() => setLoading(false));
-    }
-  }, [session]);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [status, session?.user?.role]);
 
   if (status === "loading" || loading) {
     return (
