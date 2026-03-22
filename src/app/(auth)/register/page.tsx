@@ -11,6 +11,11 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { GlassInput } from "@/components/ui/glass-input";
 import { GlassButton } from "@/components/ui/glass-button";
 import { Suspense, useEffect, useState } from "react";
+import {
+  assertCanUseGoogleOauth,
+  copyPageUrlForExternalBrowser,
+  isGoogleOauthRestrictedEnvironment,
+} from "@/lib/google-oauth-client";
 
 const registerSchema = z.object({
   name: z.string().min(2, "ชื่อต้องมีอย่างน้อย 2 ตัวอักษร"),
@@ -30,6 +35,11 @@ function RegisterForm() {
   const searchParams = useSearchParams();
   const { status } = useSession();
   const [sessionTimedOut, setSessionTimedOut] = useState(false);
+  const [showInAppGoogleHint, setShowInAppGoogleHint] = useState(false);
+
+  useEffect(() => {
+    setShowInAppGoogleHint(isGoogleOauthRestrictedEnvironment());
+  }, []);
 
   useEffect(() => {
     if (status !== "loading") return;
@@ -196,7 +206,10 @@ function RegisterForm() {
         type="button"
         variant="outline"
         className="w-full"
-        onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+        onClick={() => {
+          if (!assertCanUseGoogleOauth()) return;
+          void signIn("google", { callbackUrl: "/dashboard" });
+        }}
       >
         <svg className="w-5 h-5" viewBox="0 0 24 24">
           <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -206,6 +219,25 @@ function RegisterForm() {
         </svg>
         ลงชื่อเข้าใช้ด้วย Google
       </GlassButton>
+
+      {showInAppGoogleHint && (
+        <div className="mt-3 rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-2.5 space-y-2">
+          <p className="text-xs text-amber-100/95 leading-relaxed">
+            เปิดจากเบราว์เซอร์ในแอป (เช่น LINE / Facebook) — Google จะแสดงข้อผิดพลาด{" "}
+            <strong>403 disallowed_useragent</strong> ให้เปิดหน้านี้ใน{" "}
+            <strong>Safari</strong> หรือ <strong>Chrome</strong> แทน
+          </p>
+          <GlassButton
+            type="button"
+            variant="outline"
+            size="sm"
+            className="w-full border-amber-400/45 text-amber-50 hover:bg-amber-500/15"
+            onClick={() => void copyPageUrlForExternalBrowser()}
+          >
+            คัดลอกลิงก์หน้านี้ (ไปวางใน Safari / Chrome)
+          </GlassButton>
+        </div>
+      )}
 
       <p className="mt-6 text-center text-sm text-gray-400">
         มีบัญชีอยู่แล้ว?{" "}
