@@ -87,11 +87,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.role = row?.role ?? token.role;
         }
       }
+      // OAuth / บางกรณีใส่ user id ใน sub แต่ไม่ได้ mirror มา token.id
+      if (!token.id && token.sub) {
+        token.id = token.sub as string;
+      }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = (token.id as string) ?? "";
+        const id =
+          (typeof token.id === "string" && token.id) ||
+          (typeof token.sub === "string" && token.sub) ||
+          "";
+        session.user.id = id;
         session.user.role = (token.role as string) ?? "USER";
         session.user.referralCode = (token.referralCode as string) ?? "";
       }

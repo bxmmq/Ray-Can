@@ -24,7 +24,7 @@ interface LeaderboardEntry {
 }
 
 export default function ReferralPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,17 +32,33 @@ export default function ReferralPage() {
   const [codeCopied, setCodeCopied] = useState(false);
 
   useEffect(() => {
-    if (session?.user?.id) {
-      fetch("/api/referrals")
-        .then((res) => res.json())
-        .then((data) => {
+    if (status !== "authenticated") {
+      if (status === "unauthenticated") setLoading(false);
+      return;
+    }
+    const uid = session?.user?.id;
+    if (!uid) {
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    fetch("/api/referrals")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) {
           setReferrals(data.referrals || []);
           setLeaderboard(data.leaderboard || []);
-          setLoading(false);
-        })
-        .catch(() => setLoading(false));
-    }
-  }, [session]);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [status, session?.user?.id]);
 
   const myCode = session?.user?.referralCode ?? "";
   const referralLink =

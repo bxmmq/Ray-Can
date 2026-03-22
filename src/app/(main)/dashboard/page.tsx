@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -48,17 +48,35 @@ export default function DashboardPage() {
   }, [status, router]);
 
   useEffect(() => {
-    if (session?.user?.id) {
-      Promise.all([
-        fetch("/api/orders").then((res) => res.json()),
-        fetch("/api/notifications").then((res) => res.json()),
-      ]).then(([ordersData, notificationsData]) => {
-        setOrders(ordersData);
-        setNotifications(notificationsData);
-        setLoading(false);
-      }).catch(() => setLoading(false));
+    if (status !== "authenticated") return;
+
+    const uid = session?.user?.id;
+    if (!uid) {
+      setLoading(false);
+      return;
     }
-  }, [session]);
+
+    let cancelled = false;
+    setLoading(true);
+    Promise.all([
+      fetch("/api/orders").then((res) => res.json()),
+      fetch("/api/notifications").then((res) => res.json()),
+    ])
+      .then(([ordersData, notificationsData]) => {
+        if (!cancelled) {
+          setOrders(ordersData);
+          setNotifications(notificationsData);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [status, session?.user?.id]);
 
   const activeOrder = orders.find((o) => o.status === "ACTIVE");
 
@@ -66,6 +84,21 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin w-12 h-12 border-4 border-violet-500 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (status === "authenticated" && !session?.user?.id) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 py-24">
+        <GlassCard className="max-w-md text-center space-y-4">
+          <p className="text-gray-300">
+            ระบบไม่พบรหัสผู้ใช้ในเซสชัน กรุณาออกจากระบบแล้วล็อกอินใหม่
+          </p>
+          <GlassButton className="w-full" onClick={() => signOut({ callbackUrl: "/login" })}>
+            ออกจากระบบ
+          </GlassButton>
+        </GlassCard>
       </div>
     );
   }
