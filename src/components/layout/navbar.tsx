@@ -38,110 +38,114 @@ export function Navbar() {
     };
   }, [isMenuOpen]);
 
+  /* ห้ามใส่ backdrop-filter (.glass) ที่ห่อเมนูมือถือ — จะทำให้ fixed อ้างอิงกล่อง nav สูงแค่ 64px แล้ว overlay พังบนมือถือ */
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[100] glass border-b border-white/5">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2">
-            <BrandMark />
-            <span className="text-xl font-bold gradient-text tracking-wider">Raycast</span>
-          </Link>
-
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "text-sm font-medium transition-colors duration-300 hover:text-violet-400",
-                  pathname === link.href ? "text-violet-400" : "text-gray-300"
-                )}
-              >
-                {link.label}
+    <>
+      <header className="fixed top-0 left-0 right-0 z-[100]">
+        <nav className="glass border-b border-white/5" aria-label="หลัก">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <Link href="/" className="flex items-center gap-2">
+                <BrandMark />
+                <span className="text-xl font-bold gradient-text tracking-wider">Raycast</span>
               </Link>
-            ))}
-          </div>
 
-          <div className="hidden md:flex items-center gap-4">
-            {session ? (
-              <div className="relative">
-                <button
-                  onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                >
-                  <Avatar
-                    src={session.user?.image}
-                    fallback={session.user?.name || session.user?.email || "U"}
-                    size="sm"
-                  />
-                  <span className="text-sm font-medium text-gray-300">{session.user?.name}</span>
-                </button>
-
-                <AnimatePresence>
-                  {isProfileOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="absolute right-0 mt-2 w-48 glass-card p-2"
-                    >
-                      <Link
-                        href="/dashboard"
-                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-white/10 rounded-lg transition-colors"
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        แดชบอร์ด
-                      </Link>
-                      {session.user?.role === "ADMIN" && (
-                        <Link
-                          href="/admin"
-                          className="block px-4 py-2 text-sm text-gray-300 hover:bg-white/10 rounded-lg transition-colors"
-                          onClick={() => setIsProfileOpen(false)}
-                        >
-                          จัดการระบบ
-                        </Link>
-                      )}
-                      <button
-                        onClick={() => signOut()}
-                        className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-white/10 rounded-lg transition-colors"
-                      >
-                        ออกจากระบบ
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+              <div className="hidden md:flex items-center gap-8">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={cn(
+                      "text-sm font-medium transition-colors duration-300 hover:text-violet-400",
+                      pathname === link.href ? "text-violet-400" : "text-gray-300"
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
               </div>
-            ) : (
-              <>
-                <Link href="/login">
-                  <GlassButton variant="ghost" size="sm">เข้าสู่ระบบ</GlassButton>
-                </Link>
-                <Link href="/register">
-                  <GlassButton size="sm">ลงทะเบียน</GlassButton>
-                </Link>
-              </>
-            )}
+
+              <div className="hidden md:flex items-center gap-4">
+                {session ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => setIsProfileOpen(!isProfileOpen)}
+                      className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                    >
+                      <Avatar
+                        src={session.user?.image}
+                        fallback={session.user?.name || session.user?.email || "U"}
+                        size="sm"
+                      />
+                      <span className="text-sm font-medium text-gray-300">{session.user?.name}</span>
+                    </button>
+
+                    <AnimatePresence>
+                      {isProfileOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 10 }}
+                          className="absolute right-0 mt-2 w-48 glass-card p-2"
+                        >
+                          <Link
+                            href="/dashboard"
+                            className="block px-4 py-2 text-sm text-gray-300 hover:bg-white/10 rounded-lg transition-colors"
+                            onClick={() => setIsProfileOpen(false)}
+                          >
+                            แดชบอร์ด
+                          </Link>
+                          {session.user?.role === "ADMIN" && (
+                            <Link
+                              href="/admin"
+                              className="block px-4 py-2 text-sm text-gray-300 hover:bg-white/10 rounded-lg transition-colors"
+                              onClick={() => setIsProfileOpen(false)}
+                            >
+                              จัดการระบบ
+                            </Link>
+                          )}
+                          <button
+                            onClick={() => signOut()}
+                            className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-white/10 rounded-lg transition-colors"
+                          >
+                            ออกจากระบบ
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <>
+                    <Link href="/login">
+                      <GlassButton variant="ghost" size="sm">เข้าสู่ระบบ</GlassButton>
+                    </Link>
+                    <Link href="/register">
+                      <GlassButton size="sm">ลงทะเบียน</GlassButton>
+                    </Link>
+                  </>
+                )}
+              </div>
+
+              <button
+                type="button"
+                aria-expanded={isMenuOpen}
+                aria-label={isMenuOpen ? "ปิดเมนู" : "เปิดเมนู"}
+                className="md:hidden p-3 -mr-1 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-300 hover:text-white rounded-lg hover:bg-white/5"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {isMenuOpen ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  )}
+                </svg>
+              </button>
+            </div>
           </div>
+        </nav>
+      </header>
 
-          <button
-            type="button"
-            aria-expanded={isMenuOpen}
-            aria-label={isMenuOpen ? "ปิดเมนู" : "เปิดเมนู"}
-            className="md:hidden p-3 -mr-1 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-300 hover:text-white rounded-lg hover:bg-white/5"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {isMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* เมนูมือถือ: เต็มพื้นที่ใต้แถบหัว + พื้นหลังทึบ + backdrop — ไม่ทับเนื้อหาแบบโปร่งใส */}
       <AnimatePresence>
         {isMenuOpen && (
           <>
@@ -153,20 +157,20 @@ export function Navbar() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 top-16 z-[90] bg-black/70 backdrop-blur-md md:hidden"
+              className="fixed inset-0 z-[80] bg-black/55 backdrop-blur-sm md:hidden"
               onClick={() => setIsMenuOpen(false)}
             />
             <motion.div
               role="dialog"
               aria-modal="true"
               aria-label="เมนูนำทาง"
-              initial={{ opacity: 0, y: -12 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ type: "spring", stiffness: 380, damping: 32 }}
-              className="fixed left-0 right-0 top-16 bottom-0 z-[95] flex flex-col md:hidden bg-[#0a0a0a] border-t border-white/10 shadow-[0_8px_48px_rgba(0,0,0,0.85)]"
+              exit={{ opacity: 0, y: 16 }}
+              transition={{ type: "spring", stiffness: 420, damping: 34 }}
+              className="fixed left-0 right-0 top-16 bottom-0 z-[90] flex min-h-0 flex-col md:hidden border-t border-white/10 bg-[#0a0a0a]/92 backdrop-blur-xl shadow-[0_-8px_40px_rgba(0,0,0,0.5)] supports-[backdrop-filter]:bg-[#0a0a0a]/80"
             >
-              <div className="flex-1 overflow-y-auto overscroll-contain px-4 pt-4 pb-6">
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 pb-4">
                 <nav className="flex flex-col gap-1">
                   {navLinks.map((link) => (
                     <Link
@@ -186,7 +190,7 @@ export function Navbar() {
                 </nav>
               </div>
 
-              <div className="shrink-0 border-t border-white/10 bg-[#0a0a0a]/95 px-4 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-3">
+              <div className="shrink-0 border-t border-white/10 bg-[#080808]/90 px-4 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-3 backdrop-blur-md">
                 {session ? (
                   <>
                     <Link href="/dashboard" onClick={() => setIsMenuOpen(false)} className="block">
@@ -231,6 +235,6 @@ export function Navbar() {
           </>
         )}
       </AnimatePresence>
-    </nav>
+    </>
   );
 }
