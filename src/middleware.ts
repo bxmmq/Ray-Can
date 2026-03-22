@@ -2,15 +2,36 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
+/** Auth.js v5: cookie name + JWT salt depend on secure vs non-secure. Must match how Set-Cookie was issued (HTTPS → __Secure- prefix). */
+function usesSecureSessionCookie(request: NextRequest): boolean {
+  const forwarded = request.headers.get("x-forwarded-proto");
+  if (forwarded) {
+    const first = forwarded.split(",")[0]?.trim().toLowerCase();
+    if (first === "https" || first === "http") return first === "https";
+  }
+  return request.nextUrl.protocol === "https:";
+}
+
+function authSecret() {
+  return process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+}
+
+async function readSessionToken(request: NextRequest) {
+  const secret = authSecret();
+  if (!secret) return null;
+  return getToken({
+    req: request,
+    secret,
+    secureCookie: usesSecureSessionCookie(request),
+  });
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Already signed in → don't show login/register forms (fixes navbar session vs form mismatch)
   if (pathname === "/login" || pathname === "/register") {
-    const token = await getToken({
-      req: request,
-      secret: process.env.AUTH_SECRET,
-    });
+    const token = await readSessionToken(request);
     if (token) {
       if (pathname === "/login") {
         const cb = request.nextUrl.searchParams.get("callbackUrl");
@@ -39,10 +60,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = await getToken({
-    req: request,
-    secret: process.env.AUTH_SECRET,
-  });
+  const token = await readSessionToken(request);
 
   if (!token) {
     const loginUrl = new URL("/login", request.url);

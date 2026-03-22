@@ -63,8 +63,17 @@ function LoginForm() {
       if (result?.ok && !result?.error) {
         await refreshSession();
         toast.success("เข้าสู่ระบบสำเร็จ", "กำลังพาไปที่แดชบอร์ด…", 2500);
-        router.push("/dashboard");
-        router.refresh();
+        const rawCb = searchParams.get("callbackUrl");
+        const safe =
+          rawCb && rawCb.startsWith("/") && !rawCb.startsWith("//")
+            ? rawCb
+            : "/dashboard";
+        // เต็มหน้า: ให้คุกกี้ session ถูกส่งไปกับคำขอแรกของ /dashboard (แก้วนลูปกับ middleware บน HTTPS)
+        if (typeof window !== "undefined") {
+          window.location.assign(safe);
+        } else {
+          router.replace(safe);
+        }
         return;
       }
 
